@@ -232,4 +232,62 @@ router.get('/ver/:id_documento', async (req, res) => {
         res.status(500).json({ message: 'Error al obtener el documento', error: error.message });
     }
 });
+router.put('/uso/:id_documento', async (req, res) => {
+  const { id_documento } = req.params;
+
+  try {
+    const query = `
+      UPDATE documentos
+      SET uso = uso + 1
+      WHERE id_documento = $1
+      RETURNING *;
+    `;
+    const values = [id_documento];
+    const result = await db.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Documento no encontrado' });
+    }
+
+    res.status(200).json({ message: 'Uso actualizado', documento: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar uso', error: error.message });
+  }
+});
+router.get('/mayores', async (req, res) => {
+  try {
+    const query = `
+      SELECT id_documento, uso, nombre_documento FROM documentos
+      WHERE uso > 0
+      ORDER BY uso DESC;
+    `;
+
+    const result = await db.query(query);
+
+    res.status(200).json({
+      message: 'Documentos con uso mayor a 0 obtenidos correctamente',
+      documentos: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener documentos con uso mayor a 0', error: error.message });
+  }
+});
+// Obtener todos los documentos ordenados del más reciente al más antiguo
+router.get('/recientes', async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM documentos
+      ORDER BY createdat DESC;
+    `;
+
+    const result = await db.query(query);
+
+    res.status(200).json({
+      message: 'Documentos obtenidos del más reciente al más antiguo',
+      documentos: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener documentos ordenados', error: error.message });
+  }
+});
 module.exports = router;

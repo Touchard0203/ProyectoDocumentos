@@ -91,7 +91,7 @@ const DocumentListUser = ({ idCarpeta, idDependencia }) => {
       try {
         const idDependenciaQuery = idDependencia ? `&id_dependencia=${idDependencia}` : "";
         const url = `http://localhost:4001/api/documentos/docs/?id_carpeta=${idCarpeta}${idDependenciaQuery}&id_usuario=${id_usuario}`;
-        
+
         // Agregamos console.log para verificar la URL y los parámetros
         console.log("URL de solicitud:", url);
         console.log("idCarpeta:", idCarpeta);
@@ -117,6 +117,19 @@ const DocumentListUser = ({ idCarpeta, idDependencia }) => {
     }
   }, [idCarpeta, idDependencia, id_usuario]);
 
+  const handleDocumentClick = async (documento) => {
+    try {
+      // Aquí podrías hacer un fetch a tu backend para registrar que se visualizó
+      await fetch(`http://localhost:4001/api/documentos/uso/${documento.id_documento}`, {
+        method: "PUT"
+      });
+
+      // Luego, abrir el documento
+      window.open(`http://localhost:4001/api/documentos/ver/${documento.id_documento}`, "_blank");
+    } catch (error) {
+      console.error("Error al registrar visualización del documento:", error);
+    }
+  }
   return (
     <DocumentListContainer>
       <DocumentListTitle>Documentos</DocumentListTitle>
@@ -127,9 +140,10 @@ const DocumentListUser = ({ idCarpeta, idDependencia }) => {
       ) : (
         <DocumentGrid>
           {documentos.map((documento, index) => (
-            <DocumentCard key={index}>
+            <DocumentCard key={index} onClick={() => handleDocumentClick(documento)} style={{ cursor: "pointer" }}>
               <DocumentLink
-                href={`http://localhost:4001/${documento.ruta_archivo}`}
+                //href={`http://localhost:4001/api/documentos/ver/${documento.id_documento}`}
+                //href={`http://localhost:4001/${documento.ruta_archivo}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

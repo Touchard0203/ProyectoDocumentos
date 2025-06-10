@@ -94,11 +94,21 @@ const FolderList = ({ carpetas, setParentId }) => {
   // Filtrar carpetas en el nivel actual
   const filteredFolders = carpetas.filter((folder) => folder.id_padre === currentFolderId);
 
-  const handleFolderClick = (folder) => {
-    setBreadcrumb((prev) => [...prev, folder]); // Añadir carpeta al histórico
-    setCurrentFolderId(folder.id_carpeta); // Cambiar carpeta actual
-    setParentId(folder.id_carpeta); // Actualizar parentId para crear nuevas carpetas aquí
+  const handleFolderClick = async (folder) => {
+    try {
+      await fetch(`http://localhost:4001/api/carpetas/uso/${folder.id_carpeta}`, {
+        method: 'PUT',
+      });
+    } catch (error) {
+      console.error('Error al incrementar uso:', error);
+    }
+
+    console.log("Entrando a carpeta:", folder.nombre, "(ID:", folder.id_carpeta, ")");
+    setBreadcrumb((prev) => [...prev, folder]);
+    setCurrentFolderId(folder.id_carpeta);
+    setParentId(folder.id_carpeta);
   };
+
 
   const handleBackClick = () => {
     if (breadcrumb.length > 0) {

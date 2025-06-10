@@ -137,7 +137,19 @@ const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
       .then(() => alert("¡Enlace copiado al portapapeles!"))
       .catch(() => alert("Error al copiar el enlace."));
   };
+  const handleDocumentClick = async (documento) => {
+    try {
+      // Aquí podrías hacer un fetch a tu backend para registrar que se visualizó
+      await fetch(`http://localhost:4001/api/documentos/uso/${documento.id_documento}`, {
+        method: "PUT"
+      });
 
+      // Luego, abrir el documento
+      window.open(`http://localhost:4001/api/documentos/ver/${documento.id_documento}`, "_blank");
+    } catch (error) {
+      console.error("Error al registrar visualización del documento:", error);
+    }
+  }
   return (
     <DocumentListContainer>
       <DocumentListTitle>Documentos</DocumentListTitle>
@@ -151,9 +163,9 @@ const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
         <>
           <DocumentGrid>
             {documentos.map((documento, index) => (
-              <DocumentCard key={index}>
+              <DocumentCard key={index} onClick={() => handleDocumentClick(documento)} style={{ cursor: "pointer" }}>
                 <DocumentLink
-                  href={`http://localhost:4001/api/documentos/ver/${documento.id_documento}`}
+                  //href={`http://localhost:4001/api/documentos/ver/${documento.id_documento}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -163,15 +175,7 @@ const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
                   <DocumentName>{documento.nombre_documento}</DocumentName>
                   <DocumentAction>Ver archivo</DocumentAction>
                 </DocumentLink>
-                <ShareButton
-                  onClick={() =>
-                    copyToClipboard(
-                      `http://localhost:4001/api/documentos/ver/${documento.id_documento}`
-                    )
-                  }
-                >
-                  Compartir
-                </ShareButton>
+                
               </DocumentCard>
             ))}
           </DocumentGrid>

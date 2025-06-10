@@ -71,5 +71,68 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Error en el servidor', error: error.message });
   }
 });
+// Ruta para incrementar el uso de una carpeta
+router.put('/uso/:id_carpeta', async (req, res) => {
+  const { id_carpeta } = req.params;
+
+  try {
+    // Actualizar la columna "uso" incrementando en 1
+    const query = `
+      UPDATE carpetas
+      SET uso = uso + 1
+      WHERE id_carpeta = $1
+      RETURNING *;
+    `;
+    const values = [id_carpeta];
+    const result = await db.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Carpeta no encontrada' });
+    }
+
+    res.status(200).json({
+      message: 'Uso incrementado exitosamente',
+      carpeta: result.rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error en el servidor', error: error.message });
+  }
+});
+// Obtener carpetas con uso mayor a 0
+router.get('/mayores', async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM carpetas
+      WHERE uso > 0
+      ORDER BY uso DESC;
+    `;
+    const result = await db.query(query);
+
+    res.status(200).json({
+      message: 'Carpetas con uso mayor a 0 obtenidas correctamente',
+      carpetas: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener carpetas con uso > 0', error: error.message });
+  }
+});
+// Obtener todas las carpetas ordenadas del más reciente al más antiguo
+router.get('/recientes', async (req, res) => {
+  try {
+    const query = `
+      SELECT * FROM carpetas
+      ORDER BY fecha_creacion DESC;
+    `;
+    const result = await db.query(query);
+
+    res.status(200).json({
+      message: 'Carpetas ordenadas del más reciente al más antiguo',
+      carpetas: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener carpetas ordenadas', error: error.message });
+  }
+});
+
 
 module.exports = router;
