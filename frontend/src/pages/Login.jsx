@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import './Login.css'; // Asegúrate de tener este CSS
 
 const Login = () => {
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -27,13 +28,9 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Mostrar mensaje de éxito
         setMensaje({ text: "Inicio de sesión exitoso.", type: "success" });
-
-        // Guardar el usuario en localStorage (sin datos sensibles)
         localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-        // Redirigir al usuario según su rol
         switch (data.usuario.rol) {
           case "Admin":
             navigate("/admin");
@@ -49,66 +46,67 @@ const Login = () => {
             break;
         }
       } else {
-        // Mostrar mensaje de error devuelto por el servidor
         setMensaje({ text: data.message || "Error en las credenciales.", type: "error" });
       }
     } catch (error) {
-      // Mostrar mensaje en caso de fallo de conexión
       setMensaje({ text: "Error al conectar con el servidor.", type: "error" });
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4">Iniciar sesión</h2>
+    <div className="login-background d-flex justify-content-center align-items-center min-vh-100">
+      <div className="decorative-circle"></div>
 
-      {/* Mensaje dinámico */}
-      {mensaje.text && (
-        <div
-          className={`alert ${
-            mensaje.type === "success" ? "alert-success" : "alert-danger"
-          }`}
-        >
-          {mensaje.text}
-        </div>
-      )}
+      <div className="card shadow-lg p-4 login-card">
+        <h3 className="text-center mb-4 text-primary">🔐 Iniciar Sesión</h3>
 
-      <form onSubmit={handleSubmit} className="shadow p-4 rounded">
-        <div className="mb-3">
-          <label htmlFor="nombre_usuario" className="form-label">
-            Nombre de usuario
-          </label>
-          <input
-            type="text"
-            id="nombre_usuario"
-            className="form-control"
-            value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="contraseña" className="form-label">
-            Contraseña
-          </label>
-          <input
-            type="password"
-            id="contraseña"
-            className="form-control"
-            value={contraseña}
-            onChange={(e) => setContraseña(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary w-100">
-          Iniciar sesión
-        </button>
-      </form>
+        {mensaje.text && (
+          <div className={`alert ${mensaje.type === "success" ? "alert-success" : "alert-danger"}`}>
+            {mensaje.text}
+          </div>
+        )}
 
-      <div className="mt-3">
-        <p>
-          ¿No tienes cuenta? <a href="/register">Regístrate aquí</a>
-        </p>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="nombre_usuario" className="form-label">Nombre de usuario</label>
+            <div className="input-group">
+              <span className="input-group-text"><i className="bi bi-person-fill"></i></span>
+              <input
+                type="text"
+                id="nombre_usuario"
+                className="form-control"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                required
+                placeholder="ej. admin123"
+              />
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="contraseña" className="form-label">Contraseña</label>
+            <div className="input-group">
+              <span className="input-group-text"><i className="bi bi-lock-fill"></i></span>
+              <input
+                type="password"
+                id="contraseña"
+                className="form-control"
+                value={contraseña}
+                onChange={(e) => setContraseña(e.target.value)}
+                required
+                placeholder="********"
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary w-100 mt-3">
+            Iniciar sesión
+          </button>
+        </form>
+
+        <div className="text-center mt-3">
+          <small>¿No tienes cuenta? <a href="/register">Regístrate aquí</a></small>
+        </div>
       </div>
     </div>
   );

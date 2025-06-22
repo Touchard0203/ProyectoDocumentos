@@ -15,8 +15,18 @@ const DocumentListContainer = styled.div`
 const DocumentListTitle = styled.h3`
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #333;
+`;
+
+const SearchInput = styled.input`
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 `;
 
 const LoadingText = styled.p`
@@ -45,6 +55,7 @@ const DocumentCard = styled.li`
   padding: 1.5rem;
   text-align: center;
   transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-5px);
@@ -85,19 +96,13 @@ const DocumentListUser = ({ idCarpeta, idDependencia }) => {
 
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     const fetchDocumentos = async () => {
       try {
         const idDependenciaQuery = idDependencia ? `&id_dependencia=${idDependencia}` : "";
         const url = `http://localhost:4001/api/documentos/docs/?id_carpeta=${idCarpeta}${idDependenciaQuery}&id_usuario=${id_usuario}`;
-
-        // Agregamos console.log para verificar la URL y los parámetros
-        console.log("URL de solicitud:", url);
-        console.log("idCarpeta:", idCarpeta);
-        console.log("idDependencia:", idDependencia);
-        console.log("id_usuario:", id_usuario);
-
         const response = await fetch(url);
         const data = await response.json();
         if (data.documentos) {
@@ -119,34 +124,39 @@ const DocumentListUser = ({ idCarpeta, idDependencia }) => {
 
   const handleDocumentClick = async (documento) => {
     try {
-      // Aquí podrías hacer un fetch a tu backend para registrar que se visualizó
       await fetch(`http://localhost:4001/api/documentos/uso/${documento.id_documento}`, {
         method: "PUT"
       });
-
-      // Luego, abrir el documento
       window.open(`http://localhost:4001/api/documentos/ver/${documento.id_documento}`, "_blank");
     } catch (error) {
       console.error("Error al registrar visualización del documento:", error);
     }
-  }
+  };
+
+  const documentosFiltrados = documentos.filter(doc =>
+    doc.nombre_documento.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
     <DocumentListContainer>
       <DocumentListTitle>Documentos</DocumentListTitle>
+
+      <SearchInput
+        type="text"
+        placeholder="Buscar documento por nombre..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
+
       {loading ? (
         <LoadingText>Cargando documentos...</LoadingText>
-      ) : documentos.length === 0 ? (
+      ) : documentosFiltrados.length === 0 ? (
         <NoDocumentsText>No hay documentos disponibles.</NoDocumentsText>
       ) : (
         <DocumentGrid>
-          {documentos.map((documento, index) => (
-            <DocumentCard key={index} onClick={() => handleDocumentClick(documento)} style={{ cursor: "pointer" }}>
-              <DocumentLink
-                //href={`http://localhost:4001/api/documentos/ver/${documento.id_documento}`}
-                //href={`http://localhost:4001/${documento.ruta_archivo}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+          {documentosFiltrados.map((documento, index) => (
+            <DocumentCard key={index} onClick={() => handleDocumentClick(documento)}>
+              <DocumentLink target="_blank" rel="noopener noreferrer">
                 <DocumentIcon>
                   <FaFile size={48} />
                 </DocumentIcon>

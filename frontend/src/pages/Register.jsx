@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Register.css"; // Asegúrate de importar los estilos
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,22 +11,19 @@ const Register = () => {
   const [mensaje, setMensaje] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Cargar las dependencias al montar el componente
   useEffect(() => {
     const fetchDependencias = async () => {
       try {
         const response = await fetch("http://localhost:4001/api/dependencias/");
         const data = await response.json();
-        setDependencias(data); // Guardamos las dependencias en el estado
+        setDependencias(data);
       } catch (error) {
         console.error("Error al cargar las dependencias", error);
       }
     };
-
     fetchDependencias();
   }, []);
 
-  // Función para manejar el envío del formulario
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -37,7 +35,7 @@ const Register = () => {
     const data = {
       nombre_usuario: nombreUsuario,
       contraseña: contraseña,
-      rol: "Usuario", // Establecer el rol como Usuario por defecto
+      rol: "Usuario",
       id_dependencia: idDependencia,
     };
 
@@ -46,9 +44,7 @@ const Register = () => {
     try {
       const response = await fetch("http://localhost:4001/api/usuarios/registrar", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
@@ -56,13 +52,11 @@ const Register = () => {
 
       if (response.ok) {
         setMensaje("Registro exitoso. Redirigiendo al login...");
-        setTimeout(() => {
-          navigate("/"); // Redirigir al login después de 2 segundos
-        }, 2000); //ms
+        setTimeout(() => navigate("/"), 2000);
       } else {
-        setMensaje("Error al registrar el usuario: " + result.message);
+        setMensaje("Error al registrar: " + result.message);
       }
-    } catch (error) {
+    } catch {
       setMensaje("Error al conectar con el servidor.");
     } finally {
       setIsLoading(false);
@@ -70,57 +64,64 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4">Registrarse</h2>
-      {mensaje && <div className="alert alert-info">{mensaje}</div>}
-      <form onSubmit={handleRegister} className="shadow p-4 rounded">
-        <div className="mb-3">
-          <label htmlFor="nombre_usuario" className="form-label">Nombre de usuario</label>
-          <input
-            type="text"
-            id="nombre_usuario"
-            className="form-control"
-            value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="contraseña" className="form-label">Contraseña</label>
-          <input
-            type="password"
-            id="contraseña"
-            className="form-control"
-            value={contraseña}
-            onChange={(e) => setContraseña(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="dependencia" className="form-label">Dependencia</label>
-          <select
-            id="dependencia"
-            className="form-control"
-            value={idDependencia}
-            onChange={(e) => setIdDependencia(e.target.value)}
-            required
-          >
-            <option value="">Seleccionar dependencia</option>
-            {dependencias.map((dependencia) => (
-              <option key={dependencia.id_dependencia} value={dependencia.id_dependencia}>
-                {dependencia.nombre_dependencia}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-3">
+    <div className="register-background">
+      <div className="decorative-circle"></div>
+
+      <div className="register-card">
+        <h2 className="mb-4 text-center">Registrarse</h2>
+        {mensaje && <div className="alert alert-info">{mensaje}</div>}
+
+        <form onSubmit={handleRegister}>
+          <div className="mb-3">
+            <label htmlFor="nombre_usuario" className="form-label">Nombre de usuario</label>
+            <input
+              type="text"
+              id="nombre_usuario"
+              className="form-control"
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="contraseña" className="form-label">Contraseña</label>
+            <input
+              type="password"
+              id="contraseña"
+              className="form-control"
+              value={contraseña}
+              onChange={(e) => setContraseña(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="dependencia" className="form-label">Dependencia</label>
+            <select
+              id="dependencia"
+              className="form-control"
+              value={idDependencia}
+              onChange={(e) => setIdDependencia(e.target.value)}
+              required
+            >
+              <option value="">Seleccionar dependencia</option>
+              {dependencias.map((d) => (
+                <option key={d.id_dependencia} value={d.id_dependencia}>
+                  {d.nombre_dependencia}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
             {isLoading ? "Registrando..." : "Registrar"}
           </button>
+        </form>
+
+        <div className="mt-3 text-center">
+          <p>¿Ya tienes cuenta? <a href="/">Iniciar sesión</a></p>
         </div>
-      </form>
-      <div>
-        <p>¿Ya tienes cuenta? <a href="/">Iniciar sesión</a></p>
       </div>
     </div>
   );

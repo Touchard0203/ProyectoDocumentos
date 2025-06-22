@@ -34,7 +34,7 @@ router.get('/dependencia/:id_dependencia', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-});
+});//revisar más rato
 
 // Endpoint para actualizar el estado de una solicitud
 router.put('/:id_solicitud', async (req, res) => {
@@ -69,9 +69,17 @@ router.get('/:id_solicitud/usuario', async (req, res) => {
 
 router.post('/agregar', async (req, res) => {
     try {
-        const { comentario, id_usuario, estado } = req.body;
+        const { comentario, id_usuario, estado, id_documento } = req.body;
 
-        const newSolicitud = await db.query('INSERT INTO solicitudes (comentario, id_usuario, estado) VALUES ($1, $2, $3) RETURNING *', [comentario, id_usuario, estado]);
+        const query = `
+            INSERT INTO solicitudes (comentario, id_usuario, estado, id_documento)
+            VALUES ($1, $2, $3, $4)
+            RETURNING *;
+        `;
+
+        const values = [comentario, id_usuario, estado, id_documento];
+
+        const newSolicitud = await db.query(query, values);
 
         res.status(201).json(newSolicitud.rows[0]);
     } catch (error) {
@@ -79,5 +87,6 @@ router.post('/agregar', async (req, res) => {
         res.status(500).json({ error: 'Error al crear la solicitud' });
     }
 });
+
 
 module.exports = router;

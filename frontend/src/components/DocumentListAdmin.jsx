@@ -15,8 +15,18 @@ const DocumentListContainer = styled.div`
 const DocumentListTitle = styled.h3`
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #333;
+`;
+
+const SearchInput = styled.input`
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 `;
 
 const LoadingText = styled.p`
@@ -45,6 +55,7 @@ const DocumentCard = styled.li`
   padding: 1.5rem;
   text-align: center;
   transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-5px);
@@ -79,38 +90,15 @@ const DocumentLink = styled.a`
   align-items: center;
 `;
 
-const ShareButton = styled.button`
-  margin-top: 1rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const CopyMessage = styled.p`
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: green;
-`;
-
 const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     const fetchDocumentos = async () => {
       try {
-        const idDependenciaQuery = idDependencia
-          ? `&id_dependencia=${idDependencia}`
-          : "";
+        const idDependenciaQuery = idDependencia ? `&id_dependencia=${idDependencia}` : "";
         const response = await fetch(
           `http://localhost:4001/api/documentos/?id_carpeta=${idCarpeta}${idDependenciaQuery}`
         );
@@ -119,9 +107,11 @@ const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
           setDocumentos(data.documentos);
         } else {
           console.error("No se encontraron documentos en la respuesta");
+          setDocumentos([]);
         }
       } catch (error) {
         console.error("Error al cargar los documentos:", error);
+        setDocumentos([]);
       } finally {
         setLoading(false);
       }
@@ -137,49 +127,58 @@ const DocumentListAdmin = ({ idCarpeta, idDependencia }) => {
       .then(() => alert("¡Enlace copiado al portapapeles!"))
       .catch(() => alert("Error al copiar el enlace."));
   };
+
   const handleDocumentClick = async (documento) => {
     try {
-      // Aquí podrías hacer un fetch a tu backend para registrar que se visualizó
+      // Registrar visualización
       await fetch(`http://localhost:4001/api/documentos/uso/${documento.id_documento}`, {
-        method: "PUT"
+        method: "PUT",
       });
 
-      // Luego, abrir el documento
+      // Abrir documento en nueva pestaña
       window.open(`http://localhost:4001/api/documentos/ver/${documento.id_documento}`, "_blank");
     } catch (error) {
       console.error("Error al registrar visualización del documento:", error);
     }
-  }
+  };
+
+  // Filtrado por búsqueda
+  const documentosFiltrados = documentos.filter((doc) =>
+    doc.nombre_documento.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
     <DocumentListContainer>
       <DocumentListTitle>Documentos</DocumentListTitle>
+
+      <SearchInput
+        type="text"
+        placeholder="Buscar documento por nombre..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
+
       {loading ? (
         <LoadingText>Cargando documentos...</LoadingText>
-      ) : documentos.length === 0 ? (
-        <NoDocumentsText>
-          No hay documentos en esta carpeta para tu dependencia.
-        </NoDocumentsText>
+      ) : documentosFiltrados.length === 0 ? (
+        <NoDocumentsText>No hay documentos en esta carpeta para tu dependencia.</NoDocumentsText>
       ) : (
-        <>
-          <DocumentGrid>
-            {documentos.map((documento, index) => (
-              <DocumentCard key={index} onClick={() => handleDocumentClick(documento)} style={{ cursor: "pointer" }}>
-                <DocumentLink
-                  //href={`http://localhost:4001/api/documentos/ver/${documento.id_documento}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <DocumentIcon>
-                    <FaFile size={48} />
-                  </DocumentIcon>
-                  <DocumentName>{documento.nombre_documento}</DocumentName>
-                  <DocumentAction>Ver archivo</DocumentAction>
-                </DocumentLink>
-                
-              </DocumentCard>
-            ))}
-          </DocumentGrid>
-        </>
+        <DocumentGrid>
+          {documentosFiltrados.map((documento, index) => (
+            <DocumentCard
+              key={index}
+              onClick={() => handleDocumentClick(documento)}
+            >
+              <DocumentLink target="_blank" rel="noopener noreferrer">
+                <DocumentIcon>
+                  <FaFile size={48} />
+                </DocumentIcon>
+                <DocumentName>{documento.nombre_documento}</DocumentName>
+                <DocumentAction>Ver archivo</DocumentAction>
+              </DocumentLink>
+            </DocumentCard>
+          ))}
+        </DocumentGrid>
       )}
     </DocumentListContainer>
   );

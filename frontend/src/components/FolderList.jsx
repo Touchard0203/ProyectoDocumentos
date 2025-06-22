@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaFolder } from "react-icons/fa";
 import styled from "styled-components";
 
-// Estilos con styled-components
+// Estilos
 const FolderListContainer = styled.div`
   border: 1px solid #ddd;
   padding: 2rem;
@@ -16,8 +16,19 @@ const FolderListTitle = styled.h3`
   font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #333;
+`;
+
+const SearchInput = styled.input`
+  padding: 0.5rem 1rem;
+  margin: 0 auto 1.5rem auto;
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 `;
 
 const BreadcrumbNav = styled.nav`
@@ -26,6 +37,7 @@ const BreadcrumbNav = styled.nav`
 
 const BreadcrumbList = styled.ul`
   display: flex;
+  flex-wrap: wrap;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -35,7 +47,7 @@ const BreadcrumbItem = styled.li`
   margin-right: 10px;
   font-size: 1rem;
   color: #007bff;
-  
+
   &.active {
     color: #333;
   }
@@ -90,9 +102,14 @@ const FolderName = styled.p`
 const FolderList = ({ carpetas, setParentId }) => {
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
 
-  // Filtrar carpetas en el nivel actual
-  const filteredFolders = carpetas.filter((folder) => folder.id_padre === currentFolderId);
+  // Carpetas del nivel actual
+  const filteredFolders = carpetas.filter(
+    (folder) =>
+      folder.id_padre === currentFolderId &&
+      folder.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const handleFolderClick = async (folder) => {
     try {
@@ -103,30 +120,32 @@ const FolderList = ({ carpetas, setParentId }) => {
       console.error('Error al incrementar uso:', error);
     }
 
-    console.log("Entrando a carpeta:", folder.nombre, "(ID:", folder.id_carpeta, ")");
     setBreadcrumb((prev) => [...prev, folder]);
     setCurrentFolderId(folder.id_carpeta);
     setParentId(folder.id_carpeta);
   };
 
-
   const handleBackClick = () => {
     if (breadcrumb.length > 0) {
       const newBreadcrumb = [...breadcrumb];
-      newBreadcrumb.pop(); // Quitar último nivel del historial
+      newBreadcrumb.pop();
+      const previousFolderId = newBreadcrumb.length > 0 ? newBreadcrumb[newBreadcrumb.length - 1].id_carpeta : null;
       setBreadcrumb(newBreadcrumb);
-
-      // Cambiar carpeta actual al nivel anterior
-      const previousFolderId =
-        newBreadcrumb.length > 0 ? newBreadcrumb[newBreadcrumb.length - 1].id_carpeta : null;
       setCurrentFolderId(previousFolderId);
-      setParentId(previousFolderId); // Actualizar parentId al nivel anterior
+      setParentId(previousFolderId);
     }
   };
 
   return (
     <FolderListContainer>
       <FolderListTitle>Carpetas</FolderListTitle>
+
+      <SearchInput
+        type="text"
+        placeholder="Buscar carpeta por nombre..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+      />
 
       <BreadcrumbNav>
         <BreadcrumbList>

@@ -290,4 +290,90 @@ router.get('/recientes', async (req, res) => {
     res.status(500).json({ message: 'Error al obtener documentos ordenados', error: error.message });
   }
 });
+// Obtener todos los documentos de una dependencia
+router.get('/dependencia/:id_dependencia', async (req, res) => {
+  const { id_dependencia } = req.params;
+
+  try {
+    const query = `
+      SELECT * FROM documentos
+      WHERE id_dependencia = $1
+      ORDER BY createdat DESC;
+    `;
+
+    const result = await db.query(query, [id_dependencia]);
+
+    // Retornar directamente el array de documentos
+    res.status(200).json(result.rows);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener documentos por dependencia', error: error.message });
+  }
+});
+router.get('/detalle/:id_documento', async (req, res) => {
+  const { id_documento } = req.params;
+
+  try {
+    const query = `
+      SELECT * FROM documentos
+      WHERE id_documento = $1;
+    `;
+
+    const result = await db.query(query, [id_documento]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Documento no encontrado' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener los datos del documento', error: error.message });
+  }
+});
+router.put('/autorizar/:id_solicitud', async (req, res) => {
+  const { id_solicitud } = req.params;
+  const { estado } = req.body;
+
+  try {
+    // 1. Obtener id_usuario y id_documento desde la solicitud
+    const result = await db.query(
+      'SELECT id_usuario, id_documento FROM solicitudes WHERE id_solicitud = $1',
+      [id_solicitud]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Solicitud no encontrada' });
+    }
+
+    const { id_usuario, id_documento } = result.rows[0];
+
+    // 2. Actualizar la solicitud con nuevo estado
+    await db.query(
+      'UPDATE solicitudes SET estado = $1 WHERE id_solicitud = $2',
+      [estado, id_solicitud]
+    );
+
+    // 3. Actualizar el array usuarios_prohibidos del documento
+    if (estado === 'Rechazado') {
+      // Agregar si no está ya
+      await db.query(`
+        UPDATE documentos
+        SET usuarios_prohibidos = array_append(usuarios_prohibidos, $1)
+        WHERE id_documento = $2 AND NOT ($1 = ANY (usuarios_prohibidos))
+      `, [id_usuario, id_documento]);
+    } else if (estado === 'Aprobado') {
+      // Eliminar del array
+      await db.query(`
+        UPDATE documentos
+        SET usuarios_prohibidos = array_remove(usuarios_prohibidos, $1)
+        WHERE id_documento = $2
+      `, [id_usuario, id_documento]);
+    }
+
+    res.status(200).json({ message: `Solicitud actualizada y acceso ${estado === 'Aprobado' ? 'autorizado' : 'denegado'}` });
+  } catch (error) {
+    console.error('Error al autorizar/rechazar acceso:', error);
+    res.status(500).json({ message: 'Error en la operación', error: error.message });
+  }
+});
+
 module.exports = router;

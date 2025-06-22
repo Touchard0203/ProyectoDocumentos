@@ -5,7 +5,7 @@ const SubirArchivo = ({ idUsuario, idCarpeta, fetchDocumentos }) => {
   const [nombreDocumento, setNombreDocumento] = useState('');
   const [ruta_fisica, setRuta_fisica] = useState('');
   const [archivo, setArchivo] = useState(null);
-  const [errorArchivo, setErrorArchivo] = useState(''); // Para mostrar errores del archivo
+  const [errorArchivo, setErrorArchivo] = useState(''); 
 
   useEffect(() => {
     const fetchDependencias = async () => {
